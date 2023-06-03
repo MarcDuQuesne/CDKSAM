@@ -1,0 +1,6 @@
+{
+  "Parameters": {
+    "BUCKET_NAME": "cultureetl",
+    "SQLALCHEMY_URL": "postgresql://user:password@host:port/dbname"
+  }
+}
