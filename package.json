@@ -30,6 +30,7 @@
     "typescript": "~4.9.5"
   },
   "dependencies": {
+    "@aws-cdk/aws-lambda-python": "^1.203.0",
     "@aws-cdk/aws-lambda-python-alpha": "^2.77.0-alpha.0",
     "aws-cdk-lib": "^2.73.0",
     "aws-cdk-local": "^2.18.0",
