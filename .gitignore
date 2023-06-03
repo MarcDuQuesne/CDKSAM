@@ -7,13 +7,10 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+# SAM
+.aws-sam
 
 # env file
 .env
 # VSCode settings.
 .vscode
-
-# cdk context
-cdk.context.json
-# cultureetl
-lambda/cultureetl
