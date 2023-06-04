@@ -1,0 +1,4 @@
+.aws-sam
+cdk.json
+cdk.out
+node_modules

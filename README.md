@@ -28,7 +28,22 @@ Configure your account and region for CDK deployment
 cdk bootstrap
 ```
 
-## Local test setup
+## Docker
+A first way of testing the lambda function is to use docker.
+
+```bash
+docker build -t lambda-local -f tests/Dockerfile .
+```
+
+```bash
+docker run --rm -p 9000:9000 lambda-local:latest
+```
+
+```bash
+curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+```
+
+## SAM: Local test setup
 - Synthesize a template and write it to template.yaml
 ```bash
 cdk synth --no-staging
@@ -50,7 +65,5 @@ sam build doesn't support bundled assets
 ```bash
 sam local invoke --env-vars local-test-env.json LoadingLambda --no-event -t ./cdk.out/CDK2SAMStack.template.json
 ```
-
-
 
 
