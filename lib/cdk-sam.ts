@@ -14,6 +14,17 @@ export class CDK2SAMStack extends cdk.Stack {
     // const bucketName = cdk.Fn.importValue(`${props.dataStackName}-BucketName`);
     // const bucket = s3.Bucket.fromBucketName(this, "bucket", bucketName);
 
+    const validator = new python_lambda.PythonFunction(this, "ValidatingLambda", {
+      entry: path.join(__dirname, "../lambda/validate"),
+      timeout: cdk.Duration.minutes(15),
+      runtime: lambda.Runtime.PYTHON_3_8,
+      index: "validate.py",
+      handler: "handler",
+      environment: {
+        BUCKET_NAME: "bucket_name",
+      },
+    });
+
     const loader = new python_lambda.PythonFunction(this, "LoadingLambda", {
       entry: path.join(__dirname, "../lambda/load"),
       timeout: cdk.Duration.minutes(15),

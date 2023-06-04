@@ -1,8 +1,8 @@
 FROM amazon/aws-lambda-python:latest
 
-COPY lambda/load/requirements.txt ./requirements.txt
+COPY lambda/validate/requirements.txt ./requirements.txt
 RUN pip install -r ./requirements.txt
 
-COPY lambda/load/load.py ./load.py
+COPY lambda/validate/validate.py ./validate.py
 
-CMD [ "load.handler" ]
+CMD [ "validate.handler" ]
