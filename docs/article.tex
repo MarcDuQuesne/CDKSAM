@@ -1,0 +1,70 @@
+\documentclass{article}
+
+% Packages
+\usepackage{titlesec}
+\usepackage{lipsum}
+
+% Title formatting
+\titleformat{\section}
+{\normalfont\Large\bfseries}{\thesection}{1em}{}
+\titlespacing*{\section}{0pt}{\baselineskip}{\baselineskip}
+
+% Article metadata
+\title{Locally Testing Serverless CDK Apps}
+\author{Your Name}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+    % Abstract of the article
+\end{abstract}
+
+\section{Introduction}
+
+The AWS Cloud Development Kit (CDK) continues to gain popularity among developers for describing infrastructure as code for its growing ecosystem of community-contributed constructs and libraries and the high level abstraction for infrastructure provisioning and the convenience of using a familiar programming language. For these reasons, the CDK is a powerful tool for developing serverless applications - and sometimes even a better alternative to other frameworks like SAM (Serverless Application Model), espcially when the application is complex and requires a lot of resources or wide integration with AWS services.
+
+AWS Lambdas are the foundational building blocks of serverless application, and are typically deployed and executed in the cloud. However, during the development and testing phase, it can be advantageous to deploy Lambdas locally for faster iteration and debugging.Testing CDK apps locally allows developers to catch errors early, validate their code, and ensure smooth deployments to the cloud.
+
+In this article, we will explore and compare several prominent methods for local testing of CDK apps: unit tests with Docker within a mocking framework, using the AWS SAM (Serverless Application Model) local capabilities, LocalStack (a tool external to the AWS ecosystem). By examining the features, advantages, limitations, and use cases of each method, developers can make informed decisions on selecting the right approach for their CDK app testing needs. Let's dive in and discover how these methods can enhance the development and testing lifecycle of CDK apps.
+
+\section{Our Serverless App}
+
+TODO
+
+https://github.com/MarcDuQuesne/CDKSAM
+
+\section{Method 1: Deploying Docker Containers}
+
+One popular approach for locally testing serverless applications is deploying Lambdas in Docker images.
+
+% provide code and examples
+Create a Dockerfile: Define a Dockerfile that specifies the base image, sets up the required dependencies, and copies the Lambda function code into the image.
+
+Build the Docker image: Use the Dockerfile to build a Docker image that encapsulates the Lambda function and its dependencies.
+
+Run the Docker container: Once the Docker image is built, run the container locally to execute and test the Lambda function within the isolated environment.
+
+Test and debug: Utilize tools and techniques, such as logging and debugging capabilities, to test and debug the Lambda function within the local Docker environment.
+
+% pros and cons
+
+\section{Method 2: AWS SAM (Serverless Application Model)}
+
+While the AWS Cloud Development Kit (CDK) and the AWS Serverless Application Model (SAM) and  are often seen as alternative tools, they can complement each other effectively when it comes to local testing of serverless applications.
+
+SAM includes a local development environment, which allows developers to simulate AWS Lambda and API Gateway locally. This enables them to test their serverless functions and APIs without the need to deploy to the AWS cloud.
+
+% provide code and examples
+
+\section{Method 3: LocalStack}
+    % Method 3 content
+
+\section{Comparison and Evaluation}
+    % Comparison and evaluation content
+
+\section{Conclusion}
+    % Conclusion content
+
+\end{document}
