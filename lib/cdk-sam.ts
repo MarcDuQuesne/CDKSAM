@@ -15,7 +15,7 @@ export class CDK2SAMStack extends cdk.Stack {
     // const bucket = s3.Bucket.fromBucketName(this, "bucket", bucketName);
 
     const validator = new python_lambda.PythonFunction(this, "ValidatingLambda", {
-      entry: path.join(__dirname, "../lambda/validate"),
+      entry: path.join(__dirname, "../lambdas/validate"),
       timeout: cdk.Duration.minutes(15),
       runtime: lambda.Runtime.PYTHON_3_8,
       index: "validate.py",
@@ -26,7 +26,7 @@ export class CDK2SAMStack extends cdk.Stack {
     });
 
     const loader = new python_lambda.PythonFunction(this, "LoadingLambda", {
-      entry: path.join(__dirname, "../lambda/load"),
+      entry: path.join(__dirname, "../lambdas/load"),
       timeout: cdk.Duration.minutes(15),
       runtime: lambda.Runtime.PYTHON_3_8,
       index: "load.py",
@@ -37,6 +37,12 @@ export class CDK2SAMStack extends cdk.Stack {
       },
     });
 
+    const validationTask = new tasks.LambdaInvoke(this, "validation_task", {
+      lambdaFunction: validator,
+      resultPath: "$",
+      outputPath: "$.Payload",
+    });
+
     const loadingTask = new tasks.LambdaInvoke(this, "loading_task", {
       lambdaFunction: loader,
       resultPath: "$",
@@ -44,7 +50,7 @@ export class CDK2SAMStack extends cdk.Stack {
     });
 
     const success = new sfn.Succeed(this, "File was processed successfully.");
-    const definition = sfn.Chain.start(loadingTask).next(success);
+    const definition = sfn.Chain.start(validationTask).next(loadingTask).next(success);
 
     const stepFunction = new sfn.StateMachine(this, "ETL", {
       definition,
