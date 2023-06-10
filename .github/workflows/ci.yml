@@ -30,39 +30,76 @@ jobs:
       - name: Build project
         run: npm run build
 
-  synth:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16.20.0'
-
       - name: Synthesize CDK app
         run: npx cdk synth
 
+      # - name: Archive cdk.out
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: cdk-out
+      #     path: cdk.out
+
+      # - name: Archive compiled js
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: js
+      #     path: |
+      #       **/*.js
+
   test-lambda:
-    needs: build  # MG not really needed as here we only test one lambda.
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Build and run Docker container
-        uses: docker/build-push-action@v2
+      - name: Deploy a lambda
+        uses: ./.github/actions/local-lambda
         with:
-          context: .
-          file: ./tests/Dockerfile
-          tags: lambda-local:latest
-          build-args: |
-            - HTTP_PORT=9000
+          folder: './lambdas/validate'
+          command: 'validate.handler'
 
       - name: Send test request
         run: |
           curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+
+  local-deployment:
+    needs:
+      - build
+      - test-lambda
+    runs-on: ubuntu-latest
+
+    services:
+      localstack:
+        image: localstack/localstack
+        env:
+          SERVICES: "s3,lambda"
+        ports:
+          - 4572:4572
+          - 9000:9000
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS CLI endpoints
+        run: |
+          echo "export AWS_ACCESS_KEY_ID=foo" >> $GITHUB_ENV
+          echo "export AWS_SECRET_ACCESS_KEY=bar" >> $GITHUB_ENV
+          echo "export AWS_DEFAULT_REGION=us-east-1" >> $GITHUB_ENV
+          echo "export AWS_ENDPOINT_URL=http://localhost:4572" >> $GITHUB_ENV
+
+      # - name: Install LocalStack CLI
+      #   run: pip install localstack
+
+      # - name: Start LocalStack
+      #   run: localstack start
+
+      - name: Install dependencies  # MG is there a way to cache this?
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy CDK stack against LocalStack
+        run: npx cdk deploy --require-approval never

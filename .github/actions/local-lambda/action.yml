@@ -1,0 +1,23 @@
+name: 'Docker Build and Run'
+
+inputs:
+  folder:
+    description: 'folder for the lambda code'
+    required: true
+  command:
+    description: 'lambda handler'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: 'Checkout repository'
+      uses: actions/checkout@v2
+
+    - name: Build the dockerized lambda
+      shell: bash
+      run: docker build --build-arg input_folder=${{ inputs.folder }} -t my-lambda-image -f .github/actions/local-lambda/Dockerfile .
+
+    - name: Run the dockerized lambda
+      shell: bash
+      run: docker run -d -p 9000:8080 my-lambda-image ${{ inputs.command }}
