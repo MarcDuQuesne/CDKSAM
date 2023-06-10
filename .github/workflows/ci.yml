@@ -2,9 +2,6 @@ name: CDK Build and Synth
 
 on:
   push:
-    branches-ignore:
-      - '*'
-  pull_request:
     branches:
       - '*'
 
