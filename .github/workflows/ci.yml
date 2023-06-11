@@ -64,9 +64,9 @@ jobs:
 
 
   local-deployment:
-    needs:
-      - build
-      - test-lambda
+    # needs:
+    #   - build
+    #   - test-lambda
     runs-on: ubuntu-latest
 
     services:
@@ -82,9 +82,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Configure local AWS CLI endpoints  # MG or use cdklocal
+      - name: Configure AWS credentials  # MG or use cdklocal
         run: |
-          export AWS_ENDPOINT_URL="http://localhost:4572"
+          aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+          aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+          aws configure set default.region "$AWS_DEFAULT_REGION"
 
       # - name: Install LocalStack CLI
       #   run: pip install localstack
@@ -99,4 +101,6 @@ jobs:
         run: npm run build
 
       - name: Deploy CDK stack against LocalStack
-        run: npx cdk deploy --require-approval never
+        run: |
+          export AWS_ENDPOINT_URL="http://localhost:4572"
+          npx cdk deploy --require-approval never
