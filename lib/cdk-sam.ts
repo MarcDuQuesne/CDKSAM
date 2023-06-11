@@ -1,3 +1,4 @@
+import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
@@ -10,9 +11,6 @@ import { Construct } from "constructs";
 export class CDK2SAMStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-
-    // const bucketName = cdk.Fn.importValue(`${props.dataStackName}-BucketName`);
-    // const bucket = s3.Bucket.fromBucketName(this, "bucket", bucketName);
 
     const validator = new python_lambda.PythonFunction(this, "ValidatingLambda", {
       entry: path.join(__dirname, "../lambdas/validate"),
@@ -55,6 +53,10 @@ export class CDK2SAMStack extends cdk.Stack {
     const stepFunction = new sfn.StateMachine(this, "ETL", {
       definition,
       timeout: cdk.Duration.minutes(15),
+      stateMachineType: sfn.StateMachineType.EXPRESS,
     });
+
+    const api = new apigw.StepFunctionsRestApi(this, "ETL_API", { stateMachine: stepFunction });
+
   }
 }

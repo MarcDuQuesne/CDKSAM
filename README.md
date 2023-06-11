@@ -41,7 +41,7 @@ docker build -t lambda-local -f tests/Dockerfile .
 ```
 
 ```bash
-docker run --rm -p 9000:9000 lambda-local:latest
+docker run --rm -p 9000:8080 lambda-local:latest
 ```
 
 ```bash
@@ -75,19 +75,30 @@ sam build doesn't support bundled assets
 sam local invoke --env-vars local-test-env.json ValidatingLambda --no-event -t ./cdk.out/CDK2SAMStack.template.json
 ```
 
+- Test the API gateway with SAM
+
+```bash
+sam local start-api --env-vars local-test-env.json -t ./cdk.out/CDK2SAMStack.template.json
+```
+
+```bash
+curl -XPOST "http://localhost:3000/" -d '{}'
+```
+
+
 ## TODO use moto3 to mock out calls to e.g. s3.
 
-# maybe using a context variable:
+- maybe using a context variable:
 
-# https://docs.aws.amazon.com/cdk/latest/guide/context.html
+- https://docs.aws.amazon.com/cdk/latest/guide/context.html
 
-# or maybe - create a wrapper round sam local invoke that does this:
+- or maybe - create a wrapper round sam local invoke that does this:
 
-# scans the template for lambda functions
+  - scans the template for lambda functions
 
-# adds the mocking code to the lambda function
+  - adds the mocking code to the lambda function
 
-# runs sam local invoke
+  - runs sam local invoke
 
 # SLS-DEV-Tools
 
