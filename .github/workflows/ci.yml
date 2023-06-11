@@ -53,9 +53,9 @@ jobs:
       - name: Deploy a lambda
         uses: ./.github/actions/local-lambda
         with:
-          folder: './lambdas/validate'
+          path: './lambdas/validate'
           handler: 'validate.handler'
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}  # enables caching for layers.
 
       - name: Send test request
         run: |

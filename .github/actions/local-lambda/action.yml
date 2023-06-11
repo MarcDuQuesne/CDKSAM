@@ -9,7 +9,7 @@ inputs:
     required: true
   github_token:
      description: 'github token'
-     required: true
+     required: false
 
 runs:
   using: composite
@@ -23,15 +23,15 @@ runs:
 
     - name: Pull cache
       shell: bash
-      run: docker pull docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache-no-buildkit || true
+      run: docker pull docker.pkg.github.com/${GITHUB_REPOSITORY,,}/build-cache-no-buildkit || true
 
     - name: Build the dockerized lambda
       shell: bash
-      run: docker build --build-arg input_folder=${{ inputs.path }} -t my-lambda-image -f .github/actions/local-lambda/Dockerfile --cache-from=docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache-no-buildkit .
+      run: docker build --build-arg input_folder=${{ inputs.path }} -t my-lambda-image -f .github/actions/local-lambda/Dockerfile --cache-from=docker.pkg.github.com/${GITHUB_REPOSITORY,,}/build-cache-no-buildkit .
 
     - name: Save cache
       shell: bash
-      run: docker tag my-lambda-image docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache-no-buildkit && docker push docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache-no-buildkit || true
+      run: docker tag my-lambda-image docker.pkg.github.com/${GITHUB_REPOSITORY,,}/build-cache-no-buildkit && docker push docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache-no-buildkit || true
 
     - name: Run the dockerized lambda
       shell: bash
