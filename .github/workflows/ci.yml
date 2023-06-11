@@ -54,7 +54,8 @@ jobs:
         uses: ./.github/actions/local-lambda
         with:
           folder: './lambdas/validate'
-          command: 'validate.handler'
+          handler: 'validate.handler'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Send test request
         run: |

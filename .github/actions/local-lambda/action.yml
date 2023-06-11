@@ -1,12 +1,15 @@
 name: 'Docker Build and Run'
 
 inputs:
-  folder:
+  path:
     description: 'folder for the lambda code'
     required: true
-  command:
+  handler:
     description: 'lambda handler'
     required: true
+  github_token:
+     description: 'github token'
+     required: true
 
 runs:
   using: composite
@@ -16,7 +19,7 @@ runs:
 
     - name: Login
       shell: bash
-      run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+      run: echo ${{ inputs.github_token }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
 
     - name: Pull cache
       shell: bash
@@ -24,7 +27,7 @@ runs:
 
     - name: Build the dockerized lambda
       shell: bash
-      run: docker build --build-arg input_folder=${{ inputs.folder }} -t my-lambda-image -f .github/actions/local-lambda/Dockerfile --cache-from=docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache-no-buildkit .
+      run: docker build --build-arg input_folder=${{ inputs.path }} -t my-lambda-image -f .github/actions/local-lambda/Dockerfile --cache-from=docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache-no-buildkit .
 
     - name: Save cache
       shell: bash
@@ -32,4 +35,4 @@ runs:
 
     - name: Run the dockerized lambda
       shell: bash
-      run: docker run -d -p 9000:8080 my-lambda-image ${{ inputs.command }}
+      run: docker run -d -p 9000:8080 my-lambda-image ${{ inputs.handler }}
