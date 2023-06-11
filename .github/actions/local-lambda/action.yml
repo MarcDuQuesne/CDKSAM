@@ -31,7 +31,7 @@ runs:
 
     - name: Save cache
       shell: bash
-      run: docker tag my-lambda-image docker.pkg.github.com/${GITHUB_REPOSITORY,,}/build-cache-no-buildkit && docker push docker.pkg.github.com/$GITHUB_REPOSITORY/build-cache-no-buildkit || true
+      run: docker tag my-lambda-image docker.pkg.github.com/${GITHUB_REPOSITORY,,}/build-cache-no-buildkit && docker push docker.pkg.github.com/${GITHUB_REPOSITORY,,}/build-cache-no-buildkit || true
 
     - name: Run the dockerized lambda
       shell: bash
