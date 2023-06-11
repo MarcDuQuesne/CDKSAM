@@ -7,7 +7,7 @@ import { CDK2SAMStack } from "../lib/cdk-sam";
 const app = new cdk.App();
 new CDK2SAMStack(app, "CDK2SAMStack", {
   env: {
-    account: "111111",
+    account: "000000000000",
     region: "eu-west-1",
   },
 });

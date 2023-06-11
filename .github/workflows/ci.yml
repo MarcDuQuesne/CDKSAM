@@ -30,7 +30,7 @@ jobs:
       - name: Synthesize CDK app
         run: npx cdk synth
 
-      # - name: Archive cdk.out
+      # - name: Archive cdk.out   # SLOOOOOOW
       #   uses: actions/upload-artifact@v3
       #   with:
       #     name: cdk-out
@@ -62,45 +62,22 @@ jobs:
           response=$(curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}')
           echo $response | grep '{"result": "success"}'
 
-
   local-deployment:
-    # needs:
-    #   - build
-    #   - test-lambda
+      # needs:
+      #   - build
+      #   - test-lambda
     runs-on: ubuntu-latest
-
-    services:
-      localstack:
-        image: localstack/localstack
-        env:
-          SERVICES: "s3,lambda"
-        ports:
-          - 4572:4572
-          - 9000:9000
-
+    environment: LocalStack
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Configure AWS credentials  # MG or use cdklocal
-        run: |
-          aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
-          aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
-          aws configure set default.region "$AWS_DEFAULT_REGION"
-
-      # - name: Install LocalStack CLI
-      #   run: pip install localstack
-
-      # - name: Start LocalStack
-      #   run: localstack start
-
-      - name: Install dependencies  # MG is there a way to cache this?
+      - name: Install dependencies
         run: npm ci
 
       - name: Build project
         run: npm run build
 
-      - name: Deploy CDK stack against LocalStack
-        run: |
-          export AWS_ENDPOINT_URL="http://localhost:4572"
-          npx cdk deploy --require-approval never
+      - name: Deploy Stack against LocalStack
+        uses: ./.github/actions/localstack
