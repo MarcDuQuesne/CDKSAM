@@ -1,9 +1,6 @@
 name: CDK Build and Synth
 
-on:
-  push:
-    branches:
-      - '*'
+on: push
 
 jobs:
   build:
