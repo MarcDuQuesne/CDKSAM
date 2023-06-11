@@ -59,7 +59,9 @@ jobs:
 
       - name: Send test request
         run: |
-          curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+          response=$(curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}')
+          echo $response | grep '{"result": "success"}'
+
 
   local-deployment:
     needs:
