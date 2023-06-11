@@ -80,12 +80,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Configure AWS CLI endpoints
+      - name: Configure local AWS CLI endpoints  # MG or use cdklocal
         run: |
-          echo "export AWS_ACCESS_KEY_ID=foo" >> $GITHUB_ENV
-          echo "export AWS_SECRET_ACCESS_KEY=bar" >> $GITHUB_ENV
-          echo "export AWS_DEFAULT_REGION=us-east-1" >> $GITHUB_ENV
-          echo "export AWS_ENDPOINT_URL=http://localhost:4572" >> $GITHUB_ENV
+          export AWS_ENDPOINT_URL="http://localhost:4572"
 
       # - name: Install LocalStack CLI
       #   run: pip install localstack
