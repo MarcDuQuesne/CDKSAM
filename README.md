@@ -81,10 +81,15 @@ sam local invoke --env-vars local-test-env.json ValidatingLambda --no-event -t .
 sam local start-api --env-vars local-test-env.json -t ./cdk.out/CDK2SAMStack.template.json
 ```
 
+The integration with the stepfunction does not work unfortunately.
+see [this](https://stackoverflow.com/questions/63536861/aws-sam-starting-local-api-returns-function-name-is-required-error/63713747#63713747) issue.
 ```bash
-curl -XPOST "http://localhost:3000/" -d '{}'
+curl -XPOST "http://localhost:3000/ETL" -d '{}'
 ```
-
+But the integration with the lambda function does work:
+```bash
+curl -XPOST "http://localhost:3000/validatorLambda" -d '{}'
+```
 
 ## TODO use moto3 to mock out calls to e.g. s3.
 
