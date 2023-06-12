@@ -1,4 +1,4 @@
-import * as apigw from 'aws-cdk-lib/aws-apigateway';
+import * as apigw from "aws-cdk-lib/aws-apigateway";
 import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as path from "path";
@@ -14,6 +14,7 @@ export class CDK2SAMStack extends cdk.Stack {
 
     const validator = new python_lambda.PythonFunction(this, "ValidatingLambda", {
       entry: path.join(__dirname, "../lambdas/validate"),
+      functionName: "ValidatingLambda",
       timeout: cdk.Duration.minutes(15),
       runtime: lambda.Runtime.PYTHON_3_8,
       index: "validate.py",
@@ -25,6 +26,7 @@ export class CDK2SAMStack extends cdk.Stack {
 
     const loader = new python_lambda.PythonFunction(this, "LoadingLambda", {
       entry: path.join(__dirname, "../lambdas/load"),
+      functionName: "LoadingLambda",
       timeout: cdk.Duration.minutes(15),
       runtime: lambda.Runtime.PYTHON_3_8,
       index: "load.py",
@@ -56,7 +58,20 @@ export class CDK2SAMStack extends cdk.Stack {
       stateMachineType: sfn.StateMachineType.EXPRESS,
     });
 
-    const api = new apigw.StepFunctionsRestApi(this, "ETL_API", { stateMachine: stepFunction });
+    const api = new apigw.RestApi(this, "ETL_API");
+    const validatorPath = api.root.addResource("validatorLambda");
+    const validation_integration = new apigw.LambdaIntegration(validator);
+    validatorPath.addMethod("POST", validation_integration);
 
+    const loaderPath = api.root.addResource("loaderLambda");
+    const loader_integration = new apigw.LambdaIntegration(loader);
+    loaderPath.addMethod("POST", loader_integration);
+
+    // This does not work :(
+    // File "samcli/lib/providers/sam_function_provider.py", line 118, in get
+    // ValueError: Function name is required
+    // see https://stackoverflow.com/questions/63536861/aws-sam-starting-local-api-returns-function-name-is-required-error/63713747#63713747
+    const etlPath = api.root.addResource("ETL");
+    etlPath.addMethod("POST", apigw.StepFunctionsIntegration.startExecution(stepFunction));
   }
 }
