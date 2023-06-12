@@ -2,6 +2,7 @@
 This lambda downloads the transformed data package, validates it and then loads it into the data warehouse.
 """
 
+import json
 import os
 from typing import Dict
 
@@ -29,4 +30,4 @@ def handler(event: Dict, context: Dict) -> Dict:
     s3 = boto3.client("s3")
     ## TODO Validation logic
 
-    return {"result": "success"}
+    return {"statusCode": 200, "body": json.dumps("Success!!")}
