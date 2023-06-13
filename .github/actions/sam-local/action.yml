@@ -1,0 +1,22 @@
+name: 'SAM Local'
+
+# inputs:
+
+
+runs:
+  using: composite
+  steps:
+
+    - name: Synth
+      shell: bash
+      run: cdk synth --no-staging > template.yml
+
+    - name: SAM Build
+      shell: bash
+      run: sam build
+
+    # - name: Start The API  # MG how do we run this in the background/via docker?
+    #   shell: bash
+    #   run: sam local start-api --env-vars local-test-env.json --debug &
+
+
