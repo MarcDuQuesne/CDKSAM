@@ -53,7 +53,7 @@ curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d
 - Synthesize a template and write it to template.yaml
 
 ```bash
-cdk synth --no-staging
+cdk synth --no-staging > template.yml
 ```
 
 The AWS SAM CLI provides support for building Lambda functions and layers defined in your AWS CDK application.
@@ -64,7 +64,7 @@ conda activate stepfunctions-demo
 ```
 
 ```bash
-sam build -t ./cdk.out/CDK2SAMStack.template.json
+sam build
 ```
 
 sam build doesn't support bundled assets
@@ -72,21 +72,19 @@ sam build doesn't support bundled assets
 - Test the lambda function with SAM
 
 ```bash
-sam local invoke --env-vars local-test-env.json ValidatingLambda --no-event -t ./cdk.out/CDK2SAMStack.template.json
+sam local invoke --env-vars local-test-env.json ValidatingLambda --no-event
 ```
 
 - Test the API gateway with SAM
 
 ```bash
-sam local start-api --env-vars local-test-env.json -t ./cdk.out/CDK2SAMStack.template.json
+sam local start-api --env-vars local-test-env.json --debug
 ```
 
-The integration with the stepfunction does not work unfortunately.
-see [this](https://stackoverflow.com/questions/63536861/aws-sam-starting-local-api-returns-function-name-is-required-error/63713747#63713747) issue.
-```bash
-curl -XPOST "http://localhost:3000/ETL" -d '{}'
-```
-But the integration with the lambda function does work:
+Integrations with URI other than Lambda Function are not supported.
+
+To test the lambda function:
+
 ```bash
 curl -XPOST "http://localhost:3000/validatorLambda" -d '{}'
 ```
