@@ -67,12 +67,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build project
-        run: npm run build
-
       - name: Deploy locally using SAM
         uses: ./.github/actions/sam-local
 
