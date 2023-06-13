@@ -73,10 +73,11 @@ jobs:
       - name: Test the validatorLambda directly
         run: sam local invoke --env-vars local-test-env.json ValidatingLambda --no-event
 
+      - name: Start the API
+        run: nohup sam local start-api --env-vars local-test-env.json --debug &
+
       - name: Test the validatorLambda via the API
-        run: |
-          sam local start-api --env-vars local-test-env.json --debug &
-          curl -XPOST "http://localhost:3000/validatorLambda" -d '{}'
+        run: curl -XPOST "http://localhost:3000/validatorLambda" -d '{}'
 
   local-deployment:
     needs:
