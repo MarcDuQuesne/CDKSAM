@@ -1,16 +1,16 @@
-name: 'SAM Local'
+name: "SAM Local"
 
 # inputs:
-
 
 runs:
   using: composite
   steps:
-
     - name: Install dependencies
+      shell: bash
       run: npm ci
 
     - name: Build project
+      shell: bash
       run: npm run build
 
     - name: Synth
@@ -24,5 +24,3 @@ runs:
     # - name: Start The API  # MG how do we run this in the background/via docker?
     #   shell: bash
     #   run: sam local start-api --env-vars local-test-env.json --debug &
-
-
