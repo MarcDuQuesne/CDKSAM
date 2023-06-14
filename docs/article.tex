@@ -171,8 +171,6 @@ Finally, we can test the lambda function by passing the simulated event to the h
 
 \end{verbatim}
 
-
-
 \section{Our Serverless App}
 
 TODO
@@ -181,22 +179,78 @@ https://github.com/MarcDuQuesne/CDKSAM
 
 \section{Method 1: Deploying Docker Containers}
 
-One popular approach for locally testing serverless applications is deploying Lambdas in Docker images.
+One popular approach for locally lambda functions is deploying Lambdas in Docker images using
+the AWS Lambda Runtime Interface Emulator (RIE), a proxy for the Lambda Runtime API.
 
 % provide code and examples
-Create a Dockerfile: Define a Dockerfile that specifies the base image, sets up the required dependencies, and copies the Lambda function code into the image.
+First, we write a Dockerfile that specifies the base image, sets up the required dependencies, and copies the Lambda function code into the image.
 
-Build the Docker image: Use the Dockerfile to build a Docker image that encapsulates the Lambda function and its dependencies.
+\begin{verbatim}
+    FROM amazon/aws-lambda-python:latest
 
-Run the Docker container: Once the Docker image is built, run the container locally to execute and test the Lambda function within the isolated environment.
+    COPY lambdas/validate/requirements.txt ./requirements.txt
+    RUN pip install -r ./requirements.txt
 
-Test and debug: Utilize tools and techniques, such as logging and debugging capabilities, to test and debug the Lambda function within the local Docker environment.
+    COPY lambdas/validate/validate.py ./validate.py
 
-% pros and cons
+    CMD [ "validate.validate_csv_file" ]
+
+\end{verbatim}
+
+Then we use the Dockerfile to build a Docker image that encapsulates the Lambda function and its dependencies:
+
+```bash
+docker build -t lambda-local -f tests/Dockerfile .
+```
+
+Once the Docker image is built, we can run the container locally to execute and test the Lambda function within the isolated environment:
+
+```bash
+docker run -p 9000:8080 lambda-local:latest
+```
+
+The Lambda function can be invoked by sending an HTTP POST request to the local endpoint:
+
+```bash
+curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+```
+
+Note that our http requests are automatically converted to a json event that is passed to the lambda function.
+
+\subsection{Notes}
+\begin{itemize}
+\item Integrating this approach with pytest is straightforward. We can use the pytest-docker-compose plugin to start the container before running the tests, and to stop it afterwards.
+\item Instead of writing a Dockerfile per lambda, one can generalize the previous Dockerfile to use arguments:
+
+\begin{verbatim}
+    FROM amazon/aws-lambda-python:latest
+    ARG input_folder
+
+    COPY $input_folder /var/task/
+    WORKDIR /var/task
+
+    RUN if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+
+\end{verbatim}
+
+and build the images with:
+
+\begin{verbatim}
+    docker build --build-arg input_folder=LAMBDA_FOLDER -t my-lambda-image -f .github/actions/local-lambda/Dockerfile .
+\end{verbatim}
+
+and finally run it with:
+\begin{verbatim}
+    docker run -d -p 9000:8080 my-lambda-image HANDLER
+\end{verbatim}
+
+where LAMBDA\_FOLDER and HANDLER are the folder containing the lambda code and the name of the lambda handler, respectively.
+
+\end{itemize}
 
 \section{Method 2: AWS SAM (Serverless Application Model)}
-
-While the AWS Cloud Development Kit (CDK) and the AWS Serverless Application Model (SAM) and  are often seen as alternative tools, they can complement each other effectively when it comes to local testing of serverless applications.
+The AWS Serverless Application Model (SAM) is an open-source framework for building serverless applications.
+While the AWS Cloud Development Kit (CDK) and SAM and  are often seen as alternative tools, they can complement each other effectively when it comes to local testing of serverless applications.
 
 SAM includes a local development environment, which allows developers to simulate AWS Lambda and API Gateway locally. This enables them to test their serverless functions and APIs without the need to deploy to the AWS cloud.
 
