@@ -14,3 +14,10 @@ cdk.out
 .env
 # VSCode settings.
 .vscode
+
+article.aux
+article.pdf
+article.log
+
+**/__pycache__
+
