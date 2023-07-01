@@ -53,8 +53,7 @@ def s3_event():
     }
 
 
-@moto.mock_s3
-@pytest.fixture(autouse=True)
+
 def initialize_s3_bucket():
     """Initialize S3 bucket"""
 
@@ -63,9 +62,12 @@ def initialize_s3_bucket():
     s3.create_bucket(Bucket="validatetestbucket")
     s3.Object("validatetestbucket", "test.csv").put(Body=open(os.path.join(current_dir, "data/dataset.csv"), "rb"))
 
-
+@moto.mock_s3
 def test_validate_csv_file(s3_event):
     """Test validate_csv_file"""
+
+    # initialize the S3 bucket
+    initialize_s3_bucket()
 
     # call the lambda function handler
     result = validate_csv_file(s3_event, "")
