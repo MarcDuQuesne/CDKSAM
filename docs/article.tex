@@ -2,7 +2,6 @@
 
 % Packages
 \usepackage{titlesec}
-\usepackage{lipsum}
 
 % Title formatting
 \titleformat{\section}
@@ -11,54 +10,249 @@
 
 % Article metadata
 \title{Locally Testing Serverless CDK Apps}
-\author{Your Name}
+\author{Matteo Giani}
 \date{\today}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-    % Abstract of the article
-\end{abstract}
-
-\section{Introduction}
 
 The AWS Cloud Development Kit (CDK) continues to gain popularity among developers for describing infrastructure as code for its growing ecosystem of community-contributed constructs and libraries and the high level abstraction for infrastructure provisioning and the convenience of using a familiar programming language. For these reasons, the CDK is a powerful tool for developing serverless applications - and sometimes even a better alternative to other frameworks like SAM (Serverless Application Model), espcially when the application is complex and requires a lot of resources or wide integration with AWS services.
 
-AWS Lambdas are the foundational building blocks of serverless application, and are typically deployed and executed in the cloud. However, during the development and testing phase, it can be advantageous to deploy Lambdas locally for faster iteration and debugging.Testing CDK apps locally allows developers to catch errors early, validate their code, and ensure smooth deployments to the cloud.
+The nature of cloud native applications can make it challenging to test and debug them locally and hinder the developer's ability to rapidly and efficiently develop and debug their CDK app code without incurring in time consuming iterative deployments, or possibly breaking an environment with untested code. The adoption of a local testing strategy can help developers overcome these challenges.
 
-In this article, we will explore and compare several prominent methods for local testing of CDK apps: unit tests with Docker within a mocking framework, using the AWS SAM (Serverless Application Model) local capabilities, LocalStack (a tool external to the AWS ecosystem). By examining the features, advantages, limitations, and use cases of each method, developers can make informed decisions on selecting the right approach for their CDK app testing needs. Let's dive in and discover how these methods can enhance the development and testing lifecycle of CDK apps.
 
-\section{Our Serverless App}
+% MG consider cutting the crap above and just say something like:
 
-TODO
+% As the AWS Cloud Development Kit (CDK) continues to gain popularity among developers for describing infrastructure as code, the need for a local testing strategy becomes more and more important to ensure the quality of the code and the efficiency of the development process without incurring in time consuming iterative deployments.
 
-https://github.com/MarcDuQuesne/CDKSAM
+In this article, we explore and compare several methods for testing CDK apps locally: unit tests for the handlers, the Lambda Runtime Interface Emulator, the AWS SAM (Serverless Application Model) local capabilities and LocalStack (a tool external to the AWS ecosystem). By examining the features, advantages, limitations, and use cases of each method, developers can make informed decisions on selecting the right approach for their CDK app testing needs. Let's dive in and discover how these methods can enhance the development and testing lifecycle of CDK apps.
 
-\section{Method 1: Deploying Docker Containers}
+The code used in these examples can be found on GitHub at \url{https://github.com/MarcDuQuesne/CDKSAM}.
 
-One popular approach for locally testing serverless applications is deploying Lambdas in Docker images.
+\end{abstract}
+
+\section{Unit tests for lambda functions}
+
+AWS Lambdas are the foundational building blocks of serverless applications.
+Their runtime code can be easility tested locally using one of the many frameworks available (e.g. pytest or jest), simulating a event and passing it to the handler function, and possibly mocking or patching the AWS SDK to avoid making real calls to other AWS services. As an example we can consider the following Python code:
+
+\begin{verbatim}
+    """
+    Lambda function to validate files uploaded to S3
+    """
+
+    import json
+    import logging
+    from typing import Dict
+
+    import boto3
+    import pandas as pd
+    import pandera as pa
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    s3_client = boto3.client('s3')
+
+    # create a DataFrameSchema object that can be used to validate a DataFrame
+    schema =  pa.DataFrameSchema({
+                "temperature": pa.Column(pa.Float),
+                "humidity": pa.Column(pa.Float, checks=[
+                    pa.Check.greater_than_or_equal_to(0),
+                    pa.Check.less_than_or_equal_to(100)
+                    ]),
+                }, index=pa.Index(pa.DateTime))
+
+    def validate_csv_file(event: Dict, context: Dict) -> Dict[str, str]:
+        """
+        Validate the CSV file uploaded to S3
+        """
+
+        print(event, context)
+
+        # Get the object from the event and show its content type
+        bucket_name = event['Records'][0]['s3']['bucket']['name']
+        file_info = event['Records'][0]['s3']
+        file_key = file_info['object']['key']
+
+        # read file from S3 into DataFrame
+        csv_obj = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+        body = csv_obj["Body"]
+        df = pd.read_csv(body, index_col='datetime', parse_dates=True)
+
+        # if validation does not pass,
+        # a SchemaErrors object is raised with a detailed explanation of the error
+        schema.validate(df)
+        return {"statusCode": 200, "body": json.dumps("Success!!")}
+\end{verbatim}
+
+The code above reads a file from s3 and validates its content using a pandera schema. This lambda function can be triggered by an s3 event such as the upload of a new file.
+
+The code can be tested locally by simulating an event and passing it to the handler function, and by mocking the boto3 client to avoid making real calls s3. We will make use of the pytest and moto framework.
+
+We will start by creating a fixture to simulate an event:
+
+\begin{verbatim}
+    import pytest
+    from lambda_function import validate_csv_file
+
+    @pytest.fixture()
+    def s3_event():
+        """ Generates S3 Event"""
+
+        return {
+            "Records": [
+                {
+                    "eventVersion": "2.0",
+                    "eventSource": "aws:s3",
+                    "awsRegion": "us-east-1",
+                    "eventTime": "1970-01-01T00:00:00.000Z",
+                    "eventName": "ObjectCreated:Put",
+                    "userIdentity": {
+                        "principalId": "EXAMPLE"
+                    },
+                    "requestParameters": {
+                        "sourceIPAddress": "0.0.0.0"
+                    },
+                    "responseElements": {
+                        "x-amz-request-id": "EXAMPLE123456789",
+                        "x-amz-id-2": "EXAMPLE123/5678abcdefghijklambdaisawesome/mnopqrstuvwxyzABCDEFGH"
+                    },
+                    "s3": {
+                        "s3SchemaVersion": "1.0",
+                        "configurationId": "testConfigRule",
+                        "bucket": {
+                            "name": "mybucket",
+                            "ownerIdentity": {
+                                "principalId": "EXAMPLE"
+                            },
+                            "arn": "arn:aws:s3:::mybucket"
+                        },
+                        "object": {
+                            "key": "test.csv",
+                            "size": 1024,
+                            "eTag": "d41d8cd98f00b204e9800998ecf8427e",
+                            "versionId": "096fKKXTRTtl3on89fVO.nfljtsv6qko"
+                        }
+                    }
+                }
+            ]
+        }
+\end{verbatim}
+
+We will also use the moto3 library to create a fake s3 bucket and upload a file to it:
+
+\begin{verbatim}
+    @moto.mock_s3
+    @pytest.fixture(autouse=True)
+    def initialize_s3_bucket():
+        """Initialize S3 bucket"""
+
+        # create a fake bucket and upload a file to it
+        s3 = boto3.resource("s3")
+        s3.create_bucket(Bucket="validatetestbucket")
+        s3.Object("validatetestbucket", "test.csv").put(Body=open(os.path.join(current_dir, "data/dataset.csv"), "rb"))
+\end{verbatim}
+
+Finally, we can test the lambda function by passing the simulated event to the handler function:
+
+\begin{verbatim}
+
+    from lambda_function import validate_csv_file
+
+    def test_validate_csv_file(s3_event):
+        """ Test validate_csv_file """
+
+        # call the lambda function handler
+        result = validate_csv_file(s3_event, {})
+
+        # check that the result is correct
+        assert result["statusCode"] == 200
+
+\end{verbatim}
+
+\section{Lambda Runtime Interface Emulator}
+
+One popular approach for locally lambda functions is deploying Lambdas in Docker images using
+the AWS Lambda Runtime Interface Emulator (RIE), a proxy for the Lambda Runtime API.
 
 % provide code and examples
-Create a Dockerfile: Define a Dockerfile that specifies the base image, sets up the required dependencies, and copies the Lambda function code into the image.
+First, we write a Dockerfile that specifies the base image, sets up the required dependencies, and copies the Lambda function code into the image.
 
-Build the Docker image: Use the Dockerfile to build a Docker image that encapsulates the Lambda function and its dependencies.
+\begin{verbatim}
+    FROM amazon/aws-lambda-python:latest
 
-Run the Docker container: Once the Docker image is built, run the container locally to execute and test the Lambda function within the isolated environment.
+    COPY lambdas/validate/requirements.txt ./requirements.txt
+    RUN pip install -r ./requirements.txt
 
-Test and debug: Utilize tools and techniques, such as logging and debugging capabilities, to test and debug the Lambda function within the local Docker environment.
+    COPY lambdas/validate/validate.py ./validate.py
 
-% pros and cons
+    CMD [ "validate.validate_csv_file" ]
 
-\section{Method 2: AWS SAM (Serverless Application Model)}
+\end{verbatim}
 
-While the AWS Cloud Development Kit (CDK) and the AWS Serverless Application Model (SAM) and  are often seen as alternative tools, they can complement each other effectively when it comes to local testing of serverless applications.
+Then we use the Dockerfile to build a Docker image that encapsulates the Lambda function and its dependencies:
+
+```bash
+docker build -t lambda-local -f tests/Dockerfile .
+```
+
+Once the Docker image is built, we can run the container locally to execute and test the Lambda function within the isolated environment:
+
+```bash
+docker run -p 9000:8080 lambda-local:latest
+```
+
+The Lambda function can be invoked by sending an HTTP POST request to the local endpoint:
+
+```bash
+curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+```
+
+Note that our http requests are automatically converted to a json event that is passed to the lambda function.
+
+\subsection{Notes}
+\begin{itemize}
+\item Integrating this approach with pytest is straightforward. We can use the pytest-docker-compose plugin to start the container before running the tests, and to stop it afterwards.
+\item Instead of writing a Dockerfile per lambda, one can generalize the previous Dockerfile to use arguments:
+
+\begin{verbatim}
+    FROM amazon/aws-lambda-python:latest
+    ARG input_folder
+
+    COPY $input_folder /var/task/
+    WORKDIR /var/task
+
+    RUN if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+
+\end{verbatim}
+
+and build the images with:
+
+\begin{verbatim}
+    docker build --build-arg input_folder=LAMBDA_FOLDER -t my-lambda-image -f .github/actions/local-lambda/Dockerfile .
+\end{verbatim}
+
+and finally run it with:
+\begin{verbatim}
+    docker run -d -p 9000:8080 my-lambda-image HANDLER
+\end{verbatim}
+
+where LAMBDA\_FOLDER and HANDLER are the folder containing the lambda code and the name of the lambda handler, respectively.
+
+\end{itemize}
+
+\section{Serverless Application Model}
+The AWS Serverless Application Model (SAM) is an open-source framework for building serverless applications.
+While the AWS Cloud Development Kit (CDK) and SAM and  are often seen as alternative tools, they can complement each other effectively when it comes to local testing of serverless applications.
 
 SAM includes a local development environment, which allows developers to simulate AWS Lambda and API Gateway locally. This enables them to test their serverless functions and APIs without the need to deploy to the AWS cloud.
 
 % provide code and examples
 
-\section{Method 3: LocalStack}
+\section{LocalStack}
     % Method 3 content
 
 \section{Comparison and Evaluation}

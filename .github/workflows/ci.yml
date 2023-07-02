@@ -1,9 +1,6 @@
 name: CDK Build and Synth
 
-on:
-  push:
-    branches:
-      - '*'
+on: push
 
 jobs:
   build:
@@ -62,6 +59,25 @@ jobs:
       - name: Send test request
         run: |
           curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
+
+  SAM-test-lambda:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Deploy locally using SAM
+        uses: ./.github/actions/sam-local
+
+      - name: Test the validatorLambda directly
+        run: sam local invoke --env-vars local-test-env.json ValidatingLambda --no-event
+
+      - name: Start the API
+        run: nohup sam local start-api --env-vars local-test-env.json --debug &
+
+      - name: Test the validatorLambda via the API
+        run: curl -XPOST "http://localhost:3000/validatorLambda" -d '{}'
 
   local-deployment:
     needs:
