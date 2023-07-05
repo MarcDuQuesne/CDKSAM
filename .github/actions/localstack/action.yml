@@ -1,0 +1,39 @@
+name: 'LocalStack'
+
+runs:
+  using: composite
+  steps:
+    - name: Start LocalStack
+      shell: bash
+      run: |
+        pip install localstack awscli-local[ver1] # install LocalStack cli and awslocal
+        docker pull localstack/localstack         # Make sure to pull the latest version of the image
+        localstack start -d                       # Start LocalStack in the background
+
+        echo "Waiting for LocalStack startup..."  # Wait 30 seconds for the LocalStack container
+        localstack wait -t 30                     # to become ready before timing out
+        echo "Startup complete"
+
+    - name: Install CDK Local
+      shell: bash
+      run: npm install -g aws-cdk-local aws-cdk
+
+    - name: Bootstrap CDK stack against LocalStack
+      shell: bash
+      env:
+        LOCALSTACK_HOSTNAME: 127.0.0.1
+        DEFAULT_REGION: eu-west-1
+        AWS_ACCOUNT_ID: "000000000000"
+        AWS_ACCESS_KEY_ID: dummy-access-key
+        AWS_SECRET_ACCESS_KEY: dummy-secret-key
+      run: cdklocal bootstrap --require-approval never
+
+    - name: Bootstrap CDK stack against LocalStack
+      shell: bash
+      env:
+        LOCALSTACK_HOSTNAME: 127.0.0.1
+        DEFAULT_REGION: eu-west-1
+        AWS_ACCOUNT_ID: "000000000000"
+        AWS_ACCESS_KEY_ID: dummy-access-key
+        AWS_SECRET_ACCESS_KEY: dummy-secret-key
+      run: cdklocal deploy --require-approval never

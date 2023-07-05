@@ -1,12 +1,15 @@
 name: 'Docker Build and Run'
 
 inputs:
-  folder:
+  path:
     description: 'folder for the lambda code'
     required: true
-  command:
+  handler:
     description: 'lambda handler'
     required: true
+  github_token:
+     description: 'github token'
+     required: false
 
 runs:
   using: composite
@@ -14,10 +17,22 @@ runs:
     - name: 'Checkout repository'
       uses: actions/checkout@v2
 
+    - name: Login
+      shell: bash
+      run: echo ${{ inputs.github_token }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+
+    - name: Pull cache
+      shell: bash
+      run: docker pull docker.pkg.github.com/${GITHUB_REPOSITORY,,}/build-cache-no-buildkit || true
+
     - name: Build the dockerized lambda
       shell: bash
-      run: docker build --build-arg input_folder=${{ inputs.folder }} -t my-lambda-image -f .github/actions/local-lambda/Dockerfile .
+      run: docker build --build-arg input_folder=${{ inputs.path }} -t my-lambda-image -f .github/actions/local-lambda/Dockerfile --cache-from=docker.pkg.github.com/${GITHUB_REPOSITORY,,}/build-cache-no-buildkit .
+
+    - name: Save cache
+      shell: bash
+      run: docker tag my-lambda-image docker.pkg.github.com/${GITHUB_REPOSITORY,,}/build-cache-no-buildkit && docker push docker.pkg.github.com/${GITHUB_REPOSITORY,,}/build-cache-no-buildkit || true
 
     - name: Run the dockerized lambda
       shell: bash
-      run: docker run -d -p 9000:8080 my-lambda-image ${{ inputs.command }}
+      run: docker run -d -p 9000:8080 my-lambda-image ${{ inputs.handler }}
