@@ -62,21 +62,37 @@ python -m pytest tests/test_validate.py
 
 ### Part II of our Medium article
 
-A first way of testing the lambda function is to use docker.
+To test the entire lambda function, instead of only the runtime code inside the handler, we can build and run the docker image locally.
+
+Build the image using:
 
 ```bash
 docker build -t lambda-local -f tests/Dockerfile .
 ```
 
+Then run it on port 9000.
+
 ```bash
 docker run --rm -p 9000:8080 lambda-local:latest
 ```
+
+To verify that the lambda is listening run the following command from another terminal:
 
 ```bash
 curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{}'
 ```
 
+This sends and empty event to the lambda which then responds with an error message. In the terminal running the docker container we see the log of the lambda invocation (just as we would see in CloudWatch).
+
+To run the tests described in the article, activate a Python environment (see part I above), install docker `pip install docker` and run the tests (also make sure you stop the docker container that you may have started earlier, we're reusing port 9000):
+
+```bash
+python -m pytest tests/test_rie.py
+```
+
 ## SAM: Local test setup
+
+### Part III of our Medium article
 
 - Synthesize a template and write it to template.yaml
 
