@@ -64,6 +64,9 @@ jobs:
           echo $response | grep 'success'
 
   SAM-test-lambda:
+    needs:
+      - build
+      - test-lambda
     runs-on: ubuntu-latest
 
     steps:
@@ -83,9 +86,9 @@ jobs:
         run: curl -XPOST "http://localhost:3000/validatorLambda" -d '{}'
 
   local-deployment:
-    # needs:
-    #   - build
-    #   - test-lambda
+    needs:
+      - build
+      - test-lambda
     runs-on: ubuntu-latest
     environment: LocalStack
     steps:
