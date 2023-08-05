@@ -25,6 +25,19 @@ export class CDK2SAMStack extends cdk.Stack {
       },
     });
 
+    // We create a simple lambda function that will be used to validate a file from s3.
+    const step = new python_lambda.PythonFunction(this, "StepLambda", {
+      entry: path.join(__dirname, "../lambdas/etl-step"),
+      functionName: "ETLLambda",
+      timeout: cdk.Duration.minutes(15),
+      runtime: lambda.Runtime.PYTHON_3_8,
+      index: "step.py",
+      handler: "do_something",
+      environment: {
+        BUCKET_NAME: "bucket_name",
+      },
+    });
+
     // TODO consider removing this if it gets too complex.
     // the idea was to allow this function (locally) to interact with a local database,
     // when testing with SAM or LocalStack.

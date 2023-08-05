@@ -53,8 +53,8 @@ jobs:
       - name: Deploy a lambda
         uses: ./.github/actions/local-lambda
         with:
-          path: "./lambdas/validate"
-          handler: "validate.validate_csv_file"
+          path: "./lambdas/etl-step"
+          handler: "step.do_something"
           github_token: ${{ secrets.GITHUB_TOKEN }} # enables caching for layers.
 
       - name: Send test request
