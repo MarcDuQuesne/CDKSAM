@@ -80,9 +80,9 @@ jobs:
         run: curl -XPOST "http://localhost:3000/validatorLambda" -d '{}'
 
   local-deployment:
-    needs:
-      - build
-      - test-lambda
+    # needs:
+    #   - build
+    #   - test-lambda
     runs-on: ubuntu-latest
 
     services:
@@ -101,7 +101,6 @@ jobs:
       - name: Install dependencies  # MG is there a way to cache this?
         run: |
           npm ci
-          npm install -g aws-cdk-local
 
       - name: Build project
         run: npm run build
