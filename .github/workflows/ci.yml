@@ -54,7 +54,7 @@ jobs:
         uses: ./.github/actions/local-lambda
         with:
           path: "./lambdas/validate"
-          handler: "validate.handler"
+          handler: "validate.validate_csv_file"
           github_token: ${{ secrets.GITHUB_TOKEN }} # enables caching for layers.
 
       - name: Send test request
