@@ -106,12 +106,17 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: "testing"
-          aws-secret-access-key: "testing"
-          aws-region: "eu-west-1"
+      # - name: Configure AWS Credentials   # This resuls in "The security token included in the request is invalid."
+      #   uses: aws-actions/configure-aws-credentials@v2
+      #   with:
+      #     aws-access-key-id: "testing"
+      #     aws-secret-access-key: "testing"
+      #     aws-region: "eu-west-1"
+
+      - name: Configure AWS Credentials   # This resuls in "The security token included in the request is invalid."
+        run: |
+          export AWS_ACCESS_KEY_ID=testing
+          export AWS_SECRET_ACCESS_KEY=testing
 
       - name: Deploy CDK stack against LocalStack
         run: |
