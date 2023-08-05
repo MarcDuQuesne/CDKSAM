@@ -101,6 +101,7 @@ jobs:
       - name: Install dependencies  # MG is there a way to cache this?
         run: |
           npm ci
+          npm install aws-cdk-local aws-cdk 
 
       - name: Build project
         run: npm run build
