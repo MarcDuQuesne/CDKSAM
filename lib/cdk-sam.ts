@@ -19,7 +19,7 @@ export class CDK2SAMStack extends cdk.Stack {
       timeout: cdk.Duration.minutes(15),
       runtime: lambda.Runtime.PYTHON_3_8,
       index: "validate.py",
-      handler: "handler",
+      handler: "validate_csv_file",
       environment: {
         BUCKET_NAME: "bucket_name",
       },
