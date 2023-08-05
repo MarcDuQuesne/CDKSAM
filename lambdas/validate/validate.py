@@ -44,4 +44,4 @@ def validate_csv_file(event: Dict, context: Dict) -> Dict[str, str]:
     # if validation does not pass,
     # a SchemaErrors object is raised with a detailed explanation of the error
     schema.validate(df)
-    return {"statusCode": 200, "body": json.dumps("Success!!")}
+    return {"statusCode": 200, "body": json.dumps({ "result": "success"})}
