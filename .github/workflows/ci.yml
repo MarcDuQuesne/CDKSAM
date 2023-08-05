@@ -106,6 +106,13 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: "testing"
+          aws-secret-access-key: "testing"
+          aws-region: "eu-west-1"
+
       - name: Deploy CDK stack against LocalStack
         run: |
          cdklocal bootstrap
