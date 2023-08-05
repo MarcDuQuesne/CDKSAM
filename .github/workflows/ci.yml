@@ -98,24 +98,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Configure AWS CLI endpoints
-        run: |
-          echo "export AWS_ACCESS_KEY_ID=foo" >> $GITHUB_ENV
-          echo "export AWS_SECRET_ACCESS_KEY=bar" >> $GITHUB_ENV
-          echo "export AWS_DEFAULT_REGION=us-east-1" >> $GITHUB_ENV
-          echo "export AWS_ENDPOINT_URL=http://localhost:4572" >> $GITHUB_ENV
-
-      # - name: Install LocalStack CLI
-      #   run: pip install localstack
-
-      # - name: Start LocalStack
-      #   run: localstack start
-
       - name: Install dependencies  # MG is there a way to cache this?
-        run: npm ci
+        run: |
+          npm ci
+          npm install -g aws-cdk-local
 
       - name: Build project
         run: npm run build
 
       - name: Deploy CDK stack against LocalStack
-        run: npx cdk deploy --require-approval never
+        run: |
+         cdklocal bootstrap
+         cdklocal deploy --require-approval never
