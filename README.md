@@ -32,9 +32,7 @@ Configure your account and region for CDK deployment
 cdk bootstrap
 ```
 
-## Unit tests
-
-### Part I of our Medium article
+### Part I: Unit tests
 
 Testing the code inside the lambda using regular unit tests with `pytest`.
 
@@ -58,9 +56,7 @@ Run the tests:
 python -m pytest tests/test_validate.py
 ```
 
-## Docker
-
-### Part II of our Medium article
+### Part II: The Runtime Interface Emulator (RIE)
 
 To test the entire lambda function, instead of only the runtime code inside the handler, we can build and run the docker image locally.
 
@@ -90,9 +86,7 @@ To run the tests described in the article, activate a Python environment (see pa
 python -m pytest tests/test_rie.py
 ```
 
-## SAM: Local test setup
-
-### Part III of our Medium article
+## Part III: SAM: Local test setup
 
 - Synthesize a template and write it to template.yaml
 
@@ -132,6 +126,34 @@ To test the lambda function:
 ```bash
 curl -XPOST "http://localhost:3000/validatorLambda" -d '{}'
 ```
+
+### Part IV: Localstack
+
+Install localstack:
+
+```
+pip install --upgrade localstack
+```
+
+Export any relevant env variables (e.g. `DEBUG=1`, or your `LOCALSTACK_API_KEY`) and start localstack:
+
+```
+localstack start
+``
+
+Install awscli-local:
+
+```
+npm install -g aws-cdk-local
+```
+
+Finally, deploy your stacks locally:
+
+```
+cdklocal bootstrap
+cdklocal deploy
+```
+
 
 ## TODO use moto3 to mock out calls to e.g. s3.
 
